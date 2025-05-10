@@ -40,7 +40,7 @@ StreetBall App — это веб-приложение для организац�
 - **Framework:** Express.js 4.x
 - **База данных:** MongoDB 6+ с Mongoose ODM
 - **Аутентификация:** Passport.js, JWT
-- **Валидация:** Express-validator, Joi
+- **Валидация:** Express-validator, ?Joi?
 - **Геолокация:** Node-geocoder, Geolib
 - **Уведомления:** Nodemailer, Push-notifications
 - **Контейнеризация:** Docker, Docker Compose
