@@ -46,6 +46,24 @@ StreetBall App — это веб-приложение для организац�
 - **Контейнеризация:** Docker, Docker Compose
 - **Документация:** Swagger/OpenAPI
 - **Разработка:** Nodemon
+- **Тестирование:** Jest, Supertest
+
+```
+# Основные зависимости
+npm install express@^4 mongoose@^8 passport passport-local passport-jwt jsonwebtoken express-validator node-geocoder geolib nodemailer swagger-jsdoc swagger-ui-express cors helmet dotenv
+
+# Зависимости для разработки
+npm install -D nodemon jest supertest
+```
+
+Также нужно добавить скрипты в package.json для удобной разработки и тестирования
+```
+"scripts": {
+  "start": "node server.js",
+  "dev": "nodemon server.js",
+  "test": "jest"
+}
+```
 
 ## 2. Архитектура системы
 
