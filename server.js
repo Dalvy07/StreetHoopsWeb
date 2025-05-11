@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const { connectDB } = require('./src/config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,7 +40,26 @@ app.use('*', (req, res) => {
 });
 
 
-// Запуск сервера
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    // Подключение к базе данных
+    await connectDB();
+    
+    // Запуск сервера
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error while connecting to MongoDB', error.message);
+    process.exit(1);
+  }
+}
+
+// Start the server
+startServer();
+
+
+// // Запуск сервера
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
