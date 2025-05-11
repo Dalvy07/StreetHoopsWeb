@@ -38,19 +38,20 @@ StreetBall App — это веб-приложение для организац�
 
 - **Runtime:** Node.js 18+
 - **Framework:** Express.js 4.x
+- **Разработка:** Nodemon
+- **Тестирование:** Jest, Supertest
 - **База данных:** MongoDB 6+ с Mongoose ODM
 - **Аутентификация:** Passport.js, JWT
 - **Валидация:** Express-validator
 - **Геолокация:** Node-geocoder, Geolib
+- **Логирование:** Winston
 - **Уведомления:** Nodemailer, Push-notifications
 - **Контейнеризация:** Docker, Docker Compose
 - **Документация:** Swagger/OpenAPI
-- **Разработка:** Nodemon
-- **Тестирование:** Jest, Supertest
 
 ```
 # Основные зависимости
-npm install express@^4 mongoose@^8 passport passport-local passport-jwt jsonwebtoken express-validator node-geocoder geolib nodemailer swagger-jsdoc swagger-ui-express cors helmet dotenv
+npm install express@^4 mongoose@^8 passport passport-local passport-jwt jsonwebtoken express-validator node-geocoder geolib nodemailer swagger-jsdoc swagger-ui-express cors helmet dotenv winston
 
 # Зависимости для разработки
 npm install -D nodemon jest supertest
