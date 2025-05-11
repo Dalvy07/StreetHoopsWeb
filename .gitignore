@@ -1,102 +1,19 @@
-# === СЕКРЕТНЫЕ ДАННЫЕ И КОНФИГУРАЦИЯ ===
-# НЕ ДОЛЖНЫ попадать в репозиторий! Содержат пароли, API ключи, токены
-.env                          # Основной файл с переменными окружения
-.env.local                    # Локальные переменные
-.env.production              # Продакшен переменные  
-.env.staging                 # Стейджинг переменные
-.env.development             # Дев переменные (также может содержать ключи)
+# Node modules
+node_modules/
 
-# API ключи и сертификаты
-*.pem                        # SSL сертификаты
-*.key                        # Приватные ключи
-*.cert                       # Сертификаты
-*.p12                        # PKCS#12 файлы
-firebase-admin-key.json      # Ключи Firebase
-google-service-account-key.json  # Google Cloud ключи
-.aws/                        # AWS конфигурации
+# Environment variables (все кроме .env.example)
+.env
+.env.*
+!.env.example
 
-# === ЗАВИСИМОСТИ И СГЕНЕРИРОВАННЫЕ ФАЙЛЫ ===
-# Эти файлы создаются автоматически и могут быть восстановлены
-node_modules/                # NPM зависимости (устанавливаются из package.json)
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-.npm/                        # NPM кеш
-.cache/                      # Различные кеши
+# Logs
+*.log
+logs/
 
-# Сборка приложения
-dist/                        # Скомпилированный код
-build/                       # Собранное приложение
-
-# === ВРЕМЕННЫЕ И ПОЛЬЗОВАТЕЛЬСКИЕ ДАННЫЕ ===
-# Эти файлы создаются во время работы приложения
-logs/                        # Лог файлы
-*.log                        # Все лог файлы
-
-# Временные файлы
-temp/
-tmp/
-cache/
-.temp/
-
-# Файлы, загруженные пользователями
-uploads/                     # Папка загрузок пользователей
-public/uploads/
-!public/assets/**           # Исключение: статические ассеты проекта
-
-# База данных файлы
-data/                        # MongoDB data files
-dump.rdb                     # Redis dump files
-*.lock                       # Lock файлы
-
-# === IDE И OS ФАЙЛЫ ===
-# Персональные настройки IDE и системные файлы
-.vscode/                     # VS Code настройки
-.idea/                       # IntelliJ IDEA настройки
-*.swp                        # Vim swap files
-*.swo                        # Vim swap files
-*~                          # Временные файлы
-.DS_Store                   # macOS
-Thumbs.db                   # Windows
-Desktop.ini                 # Windows
-
-# === ТЕСТИРОВАНИЕ И РАЗРАБОТКА ===
-# Coverage reports
+# Coverage
 coverage/
-*.lcov
-.nyc_output
-test-results/
-.jest-cache/
 
-# Debugging
-.debug.log
-.local/
-dev-data/
-
-# === DOCKER И DEPLOYMENT ===
-.dockerignore               # Не нужен в репо, т.к. он для Docker build
-docker-compose.override.yml # Локальные переменные docker
-Dockerfile.prod            # Продакшен dockerfile (если отличается)
-
-# === РАЗНОЕ ===
-# Git merge files
-*.orig
-
-# Build artifacts
-*.tgz
-*.zip
-*.tar.gz
-
-# CI/CD secrets
-.github/workflows/secrets/
-
-# === ЧТО ДОЛЖНО БЫТЬ В РЕПОЗИТОРИИ ===
-# Эти файлы ДОЛЖНЫ попадать в репозиторий (исключения из игнорирования)
-!.env.example                # Пример файла с переменными
-!.eslintrc.js               # Настройки линтера
-!.prettierrc               # Настройки форматтера
-!.dockerignore             # Нужен для корректной сборки Docker
-!package-lock.json         # Фиксирует версии зависимостей
-!docker-compose.yml        # Базовая конфигурация Docker
-!Dockerfile                # Dockerfile для сборки образа
+# IDE 
+.vscode/
+.idea/
+*.swp
