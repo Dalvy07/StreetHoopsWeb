@@ -1,37 +1,38 @@
-// src/utils/errors/GameError.js
+// src/utils/errors/business/GameError.js
+const { ErrorCode } = require('../constants');
 const BusinessError = require('./BusinessError');
+const ConflictError = require('../http/ConflictError');
 
 /**
- * Ошибки, связанные с играми
- * @extends BusinessError
+ * Фабрика ошибок, связанных с играми
  */
-class GameError extends BusinessError {
-  /**
-   * Создает экземпляр ошибки, связанной с играми
-   * @param {string} message - Сообщение об ошибке
-   * @param {Array|Object|null} [errors=null] - Дополнительные детали ошибки
-   */
-  constructor(message, errors = null) {
-    super(message, errors);
-  }
-
+class GameError {
   /**
    * Игра заполнена (достигнуто максимальное количество игроков)
    * @param {string} gameId - ID игры
-   * @returns {GameError} Ошибка "Игра заполнена"
+   * @returns {ConflictError} Ошибка "Игра заполнена"
    */
   static gameFull(gameId) {
-    return new ConflictError(`Game is full (ID: ${gameId})`);
+    const error = new ConflictError(
+      `Game is full (ID: ${gameId})`, 
+      { gameId }
+    );
+    error.errorCode = ErrorCode.GAME_FULL;
+    return error;
   }
 
   /**
    * Пользователь уже участвует в игре
    * @param {string} gameId - ID игры
    * @param {string} userId - ID пользователя
-   * @returns {GameError} Ошибка "Уже участвует"
+   * @returns {BusinessError} Ошибка "Уже участвует"
    */
   static alreadyJoined(gameId, userId) {
-    return new BusinessError(`User (ID: ${userId}) is already part of the game (ID: ${gameId})`);
+    return new BusinessError(
+      `User (ID: ${userId}) is already part of the game (ID: ${gameId})`,
+      { gameId, userId },
+      ErrorCode.GAME_ALREADY_JOINED
+    );
   }
 
   /**
@@ -39,7 +40,7 @@ class GameError extends BusinessError {
    * @param {string} gameId - ID игры
    * @param {string} currentStatus - Текущий статус игры
    * @param {string|Array<string>} expectedStatus - Ожидаемый статус(ы) игры
-   * @returns {GameError} Ошибка "Некорректный статус"
+   * @returns {BusinessError} Ошибка "Некорректный статус"
    */
   static invalidStatus(gameId, currentStatus, expectedStatus) {
     const expected = Array.isArray(expectedStatus) 
@@ -48,19 +49,24 @@ class GameError extends BusinessError {
     
     return new BusinessError(
       `Cannot perform this operation on a game with status "${currentStatus}". Expected status: ${expected}.`,
-      { gameId, currentStatus, expectedStatus }
+      { gameId, currentStatus, expectedStatus },
+      ErrorCode.GAME_INVALID_STATUS
     );
   }
 
   /**
    * Некорректное время игры (в прошлом)
    * @param {Date} gameTime - Время игры
-   * @returns {GameError} Ошибка "Время в прошлом"
+   * @returns {BusinessError} Ошибка "Время в прошлом"
    */
   static gameTimeInPast(gameTime) {
     return new BusinessError(
       'Game time cannot be in the past',
-      { gameTime: gameTime.toISOString(), currentTime: new Date().toISOString() }
+      { 
+        gameTime: gameTime.toISOString(), 
+        currentTime: new Date().toISOString() 
+      },
+      ErrorCode.GAME_TIME_IN_PAST
     );
   }
 }
