@@ -1,22 +1,79 @@
 // src/utils/errors/index.js
-const AppError = require('./AppError');
-const ValidationError = require('./ValidationError');
-const NotFoundError = require('./NotFoundError');
-const BusinessError = require('./BusinessError');
-const ConflictError = require('./ConflictError');
-const UnauthorizedError = require('./UnauthorizedError');
-const ForbiddenError = require('./ForbiddenError');
-const GameError = require('./GameError');
-const AuthError = require('./AuthError');
+/**
+ * Главный индексный файл для экспорта всех ошибок приложения
+ */
 
-module.exports = {
-  AppError,
+// Константы
+const { ErrorType, ErrorCode } = require('./constants');
+
+// Базовые ошибки
+const { AppError } = require('./core');
+
+// HTTP ошибки
+const { 
+  BadRequestError,
   ValidationError,
-  NotFoundError,
-  BusinessError,
-  ConflictError,
   UnauthorizedError,
   ForbiddenError,
+  NotFoundError,
+  ConflictError
+} = require('./http');
+
+// Ошибки базы данных
+const {
+  DatabaseError,
+  ConnectionError,
+  QueryError,
+  TransactionError,
+  MigrationError
+} = require('./database');
+
+// Бизнес-ошибки
+const {
+  BusinessError,
+  AuthError,
+  GameError
+} = require('./business');
+
+// Системные ошибки
+const {
+  SystemError,
+  ConfigError,
+  FileSystemError,
+  NetworkError
+} = require('./system');
+
+module.exports = {
+  // Константы
+  ErrorType,
+  ErrorCode,
+  
+  // Базовые ошибки
+  AppError,
+  
+  // HTTP ошибки
+  BadRequestError,
+  ValidationError,
+  UnauthorizedError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+  
+  // Ошибки базы данных
+  DatabaseError,
+  ConnectionError,
+  QueryError,
+  TransactionError,
+  MigrationError,
+  
+  // Бизнес-ошибки
+  BusinessError,
+  AuthError,
   GameError,
-  AuthError
+  
+  // Системные ошибки
+  SystemError,
+  ConfigError,
+  FileSystemError,
+  NetworkError
 };
