@@ -32,6 +32,15 @@ const userSchema = new Schema({
     type: String,
     trim: true
   },
+  role: {
+    type: String,
+    enum: ['user', 'admin', 'moderator'],
+    default: 'user'
+  },
+  lastLogin: {
+    type: Date,
+    default: null
+  },
   createdGames: [{
     type: Schema.Types.ObjectId,
     ref: 'Game'
@@ -72,6 +81,25 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Метод для обновления времени последнего входа
+userSchema.methods.updateLastLogin = function() {
+  this.lastLogin = new Date();
+  return this.save();
+};
+
+// Метод для проверки роли пользователя
+userSchema.methods.hasRole = function(roles) {
+  if (!Array.isArray(roles)) {
+    roles = [roles];
+  }
+  return roles.includes(this.role);
+};
+
+// Индекс для поиска пользователей по роли
+userSchema.index({ role: 1 });
+// Индекс для отслеживания активности пользователей
+userSchema.index({ lastLogin: -1 });
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;

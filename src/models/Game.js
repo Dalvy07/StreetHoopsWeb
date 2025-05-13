@@ -10,6 +10,11 @@ const playerSchema = new Schema({
   joinedAt: {
     type: Date,
     default: Date.now
+  },
+  status: {
+    type: String,
+    enum: ['confirmed', 'maybe', 'cancelled'],
+    default: 'confirmed'
   }
 });
 
@@ -39,7 +44,8 @@ const gameSchema = new Schema({
   },
   format: {
     type: String,
-    required: true
+    required: true,
+    enum: ['3x3', '5x5', 'freestyle', 'training', 'other']
   },
   maxPlayers: {
     type: Number,
@@ -62,17 +68,108 @@ const gameSchema = new Schema({
     type: Boolean,
     default: false
   },
-  inviteCode: String
+  inviteCode: String,
+  tags: [String]  // Для дополнительной категоризации ("дружеская", "конкурентная", "тренировка" и т.д.)
 }, { timestamps: true });
 
-// Индекс для поиска по дате и времени
+// TODO Поменять на планировщик задач
+// Использовать cron или другой планировщик задач для периодической проверки статусов игр
+// Автоматическое обновление статуса игры на основе времени
+gameSchema.pre('find', function() {
+  this._timer = setTimeout(() => {
+    const now = new Date();
+    
+    // Найти игры, которые должны быть в прогрессе
+    Game.updateMany(
+      { 
+        status: 'scheduled', 
+        dateTime: { $lte: now }
+      },
+      { $set: { status: 'in_progress' } }
+    ).exec();
+    
+    // Найти игры, которые должны быть завершены
+    Game.updateMany(
+      { 
+        status: 'in_progress', 
+        $expr: { 
+          $lte: [
+            { $add: ['$dateTime', { $multiply: ['$duration', 60000] }] }, 
+            now.getTime()
+          ]
+        }
+      },
+      { $set: { status: 'completed' } }
+    ).exec();
+  }, 0);
+});
+
+// Метод для проверки возможности присоединения к игре
+gameSchema.methods.canJoin = function(userId) {
+  // Проверка статуса игры
+  if (this.status !== 'scheduled') {
+    return {
+      canJoin: false,
+      reason: 'Game is not in scheduled status'
+    };
+  }
+  
+  // Проверка даты игры
+  if (new Date(this.dateTime) < new Date()) {
+    return {
+      canJoin: false,
+      reason: 'Game has already started'
+    };
+  }
+  
+  // Проверка на максимальное количество игроков
+  if (this.currentPlayers.length >= this.maxPlayers) {
+    return {
+      canJoin: false,
+      reason: 'Game is full'
+    };
+  }
+  
+  // Проверка, не присоединился ли пользователь уже
+  if (this.currentPlayers.some(player => player.user.toString() === userId.toString())) {
+    return {
+      canJoin: false,
+      reason: 'User already joined this game'
+    };
+  }
+  
+  return {
+    canJoin: true
+  };
+};
+
+// Метод для получения количества свободных мест
+gameSchema.methods.getAvailableSpots = function() {
+  return this.maxPlayers - this.currentPlayers.length;
+};
+
+// Метод для получения списка подтвержденных игроков
+gameSchema.methods.getConfirmedPlayers = function() {
+  return this.currentPlayers.filter(player => 
+    player.status === 'confirmed'
+  );
+};
+
+// Метод для отмены игры
+gameSchema.methods.cancelGame = function(reason) {
+  this.status = 'cancelled';
+  this.cancelReason = reason;
+  return this.save();
+};
+
+// Индексы для оптимизации запросов
 gameSchema.index({ dateTime: 1 });
-// Индекс для поиска по создателю
 gameSchema.index({ creator: 1 });
-// Индекс для поиска по площадке
 gameSchema.index({ court: 1 });
-// Индекс для поиска по статусу
 gameSchema.index({ status: 1 });
+gameSchema.index({ sportType: 1, skillLevel: 1 });
+gameSchema.index({ dateTime: 1, status: 1 });
+gameSchema.index({ 'currentPlayers.user': 1 });
 
 const Game = mongoose.model('Game', gameSchema);
 module.exports = Game;
