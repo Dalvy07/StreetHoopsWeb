@@ -16,6 +16,11 @@ class UserRepository {
     return await user.save();
   }
 
+  async createMinimal(username, email, password) {
+    const user = new User({ username, email, password });
+    return await user.save();
+  }
+
   /**
    * Получение пользователя по ID
    * @param {string} userId - ID пользователя

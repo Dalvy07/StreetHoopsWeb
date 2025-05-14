@@ -84,6 +84,10 @@ app.use(express.urlencoded({ extended: true }));
 const userRoutes = require('./src/routes/user.routes');
 app.use('/api/v1/users', userRoutes);
 
+// определение маршрутов аутентификации
+const authRoutes = require('./src/routes/auth.routes');
+app.use('/api/v1/auth', authRoutes);
+
 // Базовый маршрут API
 app.get('/api/v1', (req, res) => {
   res.json({

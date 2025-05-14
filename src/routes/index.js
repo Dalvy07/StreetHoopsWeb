@@ -20,6 +20,7 @@
 const express = require('express');
 const router = express.Router();
 const userRoutes = require('./user.routes');
+const authRoutes = require('./auth.routes');
 
 // Базовый маршрут API
 router.get('/', (req, res) => {
@@ -31,5 +32,6 @@ router.get('/', (req, res) => {
 
 // Регистрация маршрутов
 router.use('/users', userRoutes);
+router.use('/auth', authRoutes);
 
 module.exports = router;
