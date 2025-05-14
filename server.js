@@ -72,6 +72,11 @@ const ApiResponse = require('./src/utils/ApiResponse');
 const { NotFoundError } = require('./src/utils/errors');
 const errorHandler = require('./src/middleware/errorHandler');
 
+const passport = require('./src/config/passport');
+const authenticate = require('./src/middleware/auth.middleware');
+const checkRole = require('./src/middleware/checkRole.middleware');
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -81,6 +86,10 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Конфигурация Passport.js
+app.use(passport.initialize());
+
 
 // Прямое определение маршрутов без использования отдельного файла routes/index.js
 const userRoutes = require('./src/routes/user.routes');
@@ -99,8 +108,13 @@ app.get('/api/v1', (req, res) => {
   });
 });
 
+// // Маршрут для понимания как использовать middleware
+// app.get('/', authenticate, checkRole(['admin']),  (req, res) => {
+//   res.json(ApiResponse.success('Welcome to the StreetBall API!', "Endpoint is working"));
+// });
+
 // Базовые маршруты приложения
-app.get('/', (req, res) => {
+app.get('/', authenticate, checkRole(['user']),  (req, res) => {
   res.json(ApiResponse.success('Welcome to the StreetBall API!', "Endpoint is working"));
 });
 
