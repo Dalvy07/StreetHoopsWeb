@@ -64,6 +64,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const { connectDB } = require('./src/config/database');
 const logger = require('./src/utils/logger');
@@ -77,6 +78,7 @@ const PORT = process.env.PORT || 3000;
 // Базовые middleware
 app.use(helmet());
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -86,6 +88,7 @@ app.use('/api/v1/users', userRoutes);
 
 // определение маршрутов аутентификации
 const authRoutes = require('./src/routes/auth.routes');
+const { cookie } = require('express-validator');
 app.use('/api/v1/auth', authRoutes);
 
 // Базовый маршрут API

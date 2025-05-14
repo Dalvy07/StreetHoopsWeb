@@ -37,6 +37,14 @@ const userSchema = new Schema({
     enum: ['user', 'admin', 'moderator'],
     default: 'user'
   },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  emailVerificationLink: {
+    type: String,
+    default: null
+  },
   lastLogin: {
     type: Date,
     default: null

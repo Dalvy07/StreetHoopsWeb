@@ -37,12 +37,20 @@ class RefreshTokenRepository {
      * @returns {Promise<RefreshToken>} - Удаленный refresh токен
      * @throws {NotFoundError} - Если refresh токен не найден
      */
-    async delete(tokenId) {
+    async deleteById(tokenId) {
         const token = await RefreshToken.findByIdAndDelete(tokenId);
         if (!token) {
             throw new NotFoundError('Refresh token not found', 'RefreshToken', tokenId);
         }
         return token;
+    }
+
+    async delete(refreshTokenToDelete) {
+        const tokenData = await RefreshToken.findOneAndDelete({ refreshToken: refreshTokenToDelete });
+        if (!tokenData) {
+            throw new NotFoundError('Refresh token not found', 'RefreshToken', refreshTokenToDelete);
+        }
+        return tokenData;
     }
 }
 
