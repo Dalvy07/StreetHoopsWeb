@@ -3,13 +3,22 @@ const router = express.Router();
 
 const authController = require('../controllers/auth.controller');
 
-// Публичные маршруты
-router.post('/register', authController.registerUserMinimal);
-router.post('/login', authController.loginUser);
-router.post('/logout', authController.logoutUser);
-router.get('/refresh', authController.refreshToken);
+const {
+    registerMinimalSchema,
+    loginSchema,
+    logoutSchema,
+    refreshTokenSchema,
+    activateEmailSchema
+} = require('../validators/auth.validator');
+const validate = require('../middleware/validate.middleware');
 
-router.get('/activate/:link', authController.activateEmail);
+// Публичные маршруты
+router.post('/register', registerMinimalSchema, validate, authController.registerUserMinimal);
+router.post('/login', loginSchema, validate, authController.loginUser);
+router.post('/logout', logoutSchema, validate, authController.logoutUser);
+router.get('/refresh', refreshTokenSchema, validate, authController.refreshToken);
+
+router.get('/activate/:link', activateEmailSchema, validate, authController.activateEmail);
 
 
 module.exports = router;
