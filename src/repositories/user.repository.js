@@ -16,8 +16,19 @@ class UserRepository {
     return await user.save();
   }
 
-  async createMinimal(username, email, password) {
-    const user = new User({ username, email, password });
+  // async createMinimal(username, email, password) {
+  //   const user = new User({ username, email, password });
+  //   return await user.save();
+  // }
+
+  async createMinimal({ username, email, password, emailVerificationLink, isEmailVerified = false }) {
+    const user = new User({
+      username: username,
+      email: email,
+      password: password,
+      emailVerificationLink: emailVerificationLink,
+      isEmailVerified: isEmailVerified
+    });
     return await user.save();
   }
 
@@ -34,6 +45,15 @@ class UserRepository {
       throw new NotFoundError('User not found', 'User', userId);
     }
     return user;
+  }
+
+  /**
+ * Получение пользователя по ссылке активации
+ * @param {string} activationLink - Ссылка активации пользователя
+ * @returns {Promise<User|null>} - Найденный пользователь или null
+ */
+  async findByActivationLink(activationLink) {
+    return await User.findOne({ emailVerificationLink: activationLink });
   }
 
   /**
@@ -63,12 +83,12 @@ class UserRepository {
    */
   async findAll(page = 1, limit = 10, filter = {}) {
     const skip = (page - 1) * limit;
-    
+
     const [users, total] = await Promise.all([
       User.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
       User.countDocuments(filter)
     ]);
-    
+
     return {
       users,
       total,
@@ -90,11 +110,11 @@ class UserRepository {
       { $set: updateData },
       { new: true, runValidators: true }
     );
-    
+
     if (!user) {
       throw new NotFoundError('User not found', 'User', userId);
     }
-    
+
     return user;
   }
 
@@ -106,11 +126,11 @@ class UserRepository {
    */
   async delete(userId) {
     const result = await User.findByIdAndDelete(userId);
-    
+
     if (!result) {
       throw new NotFoundError('User not found', 'User', userId);
     }
-    
+
     return true;
   }
 
@@ -146,11 +166,11 @@ class UserRepository {
           select: 'name location'
         }
       });
-    
+
     if (!user) {
       throw new NotFoundError('User not found', 'User', userId);
     }
-    
+
     return {
       games: user.createdGames,
       total: user.createdGames.length,
@@ -186,11 +206,11 @@ class UserRepository {
           }
         ]
       });
-    
+
     if (!user) {
       throw new NotFoundError('User not found', 'User', userId);
     }
-    
+
     return {
       games: user.joinedGames,
       total: user.joinedGames.length,
@@ -211,11 +231,11 @@ class UserRepository {
       { $set: { notifications: notificationSettings } },
       { new: true, runValidators: true }
     );
-    
+
     if (!user) {
       throw new NotFoundError('User not found', 'User', userId);
     }
-    
+
     return user;
   }
 }

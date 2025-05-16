@@ -4,6 +4,8 @@ const TokenServise = require('./token.servise');
 const { AuthError } = require('../utils/errors');
 const UserDTO = require('../utils/dtos/UserDTO');
 const uuid = require('uuid');
+const Mail = require('nodemailer/lib/mailer');
+const mailServise = require('./mail.servise');
 
 class AuthServise {
     async registerUser(userData) {
@@ -46,15 +48,32 @@ class AuthServise {
             throw AuthError.invalidCredentials('Email already in use');
         }
 
-        // Создаем нового пользователя
-        const newUser = await userRepository.createMinimal(username, email, password);
+        const activationLink = uuid.v4();
 
-        // const activationLink = uuid.v4();
-        // await mailServise.sendActivationMail(email, `${process.env.API_URL}/auth/activate${activationLink}`);   // TODO: CHECK URL!!! I Dont have SMTP now to test it
+        // Создаем нового пользователя
+        const newUser = await userRepository.createMinimal({
+            username: username, 
+            email: email, 
+            password: password, 
+            emailVerificationLink: activationLink,
+            isEmailVerified: false
+        });
 
         const userDTO = new UserDTO(newUser);
-        const tokens = await TokenServise.generateTokens({ id: userDTO.id, username: userDTO.username, email: userDTO.email, role: userDTO.role });
+        const tokens = await TokenServise.generateTokens({ 
+            id: userDTO.id, 
+            username: userDTO.username, 
+            email: userDTO.email, 
+            role: userDTO.role, 
+            isEmailVerified: false
+        });
         await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
+
+        await mailServise.sendActivationMail(
+            newUser.email, 
+            newUser.emailVerificationLink,  //
+            newUser.username
+        );
 
         return {
             user: userDTO,
@@ -67,8 +86,67 @@ class AuthServise {
         if (!user) {
             throw AuthError.invalidCredentials('Invalid activation link');
         }
-        user.isActivated = true;
+
+        if (user.isEmailVerified) {
+            // return { 
+            //     success: true, 
+            //     message: 'Email already verified',
+            //     alreadyVerified: true
+            // };
+            throw AuthError.invalidCredentials('Email already verified');
+        }
+
+        user.isEmailVerified = true;
+        user.emailVerificationLink  = null;
         await user.save();
+
+        const userDTO = new UserDTO(user);
+
+        await mailServise.sendEmailVerifiedNotification(user.email, user.username);
+
+        return {
+            success: true,
+            message: 'Email successfully verified',
+            user: userDTO
+        };
+    }
+
+    async resendVerificationEmail(userId) {
+        const user = await userRepository.findById(userId);
+        
+        // Проверяем, не подтвержден ли уже email
+        if (user.isEmailVerified) {
+            // return {
+            //     success: false,
+            //     message: 'Email already verified'
+            // };
+            throw AuthError.invalidCredentials('Email already verified');
+        }
+
+        // Генерируем новый токен для верификации
+        const newVerificationLink = uuid.v4();
+        user.emailVerificationLink = newVerificationLink;
+        await user.save();
+
+        // Отправляем новое письмо
+        const emailSent = await mailServise.sendActivationMail(
+            user.email,
+            user.newVerificationLink,
+            user.username
+        );
+
+        if (!emailSent) {
+            // return {
+            //     success: false,
+            //     message: 'Failed to send verification email'
+            // };
+            throw AuthError.invalidCredentials('Failed to send verification email');
+        }
+
+        return {
+            success: true,
+            message: 'Verification email sent successfully' 
+        };
     }
 
     async loginUser(email, password) {
@@ -83,7 +161,13 @@ class AuthServise {
         }
 
         const userDTO = new UserDTO(user);
-        const tokens = await TokenServise.generateTokens({ id: userDTO.id, username: userDTO.username, email: userDTO.email, role: userDTO.role });
+        const tokens = await TokenServise.generateTokens({ 
+            id: userDTO.id, 
+            username: userDTO.username, 
+            email: userDTO.email, 
+            role: userDTO.role, 
+            isEmailVerified: false
+        });
         await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
@@ -110,7 +194,13 @@ class AuthServise {
 
         const user = await userRepository.findById(userData.id);
         const userDTO = new UserDTO(user);
-        const tokens = await TokenServise.generateTokens({ id: userDTO.id, username: userDTO.username, email: userDTO.email, role: userDTO.role });
+        const tokens = await TokenServise.generateTokens({ 
+            id: userDTO.id, 
+            username: userDTO.username, 
+            email: userDTO.email, 
+            role: userDTO.role, 
+            isEmailVerified: false
+        });
         await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
