@@ -166,7 +166,7 @@ class AuthServise {
             username: userDTO.username, 
             email: userDTO.email, 
             role: userDTO.role, 
-            isEmailVerified: false
+            isEmailVerified: userDTO.isEmailVerified
         });
         await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
 
@@ -199,7 +199,7 @@ class AuthServise {
             username: userDTO.username, 
             email: userDTO.email, 
             role: userDTO.role, 
-            isEmailVerified: false
+            isEmailVerified: userDTO.isEmailVerified
         });
         await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
 
