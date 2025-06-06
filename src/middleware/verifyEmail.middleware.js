@@ -1,6 +1,3 @@
-const { AuthError } = require('../utils/errors');
-
-
 // src/middleware/verifiedEmail.middleware.js
 const { AuthError } = require('../utils/errors');
 
