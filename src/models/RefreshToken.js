@@ -18,7 +18,7 @@ const refreshTokenSchema = new Schema({
     }
 });
 
-refreshTokenSchema.index({ createdAt: 1 }, { expireAfterSeconds: process.env.JWT_REFRESH_EXPIRE_DAYS * 24 * 60 * 60 }); // Индекс для автоматического удаления токенов по истечении срока действия
+refreshTokenSchema.index({ createdAt: 1 }, { expireAfterSeconds: process.env.JWT_REFRESH_EXPIRE_SEC }); // Индекс для автоматического удаления токенов по истечении срока действия
 
 const RefreshToken = mongoose.model('RefreshToken', refreshTokenSchema);
 module.exports = RefreshToken;
