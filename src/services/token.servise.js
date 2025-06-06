@@ -53,6 +53,16 @@ class TokenServise {
         const tokenData = await refreshTokenRepository.findByToken(refreshToken);
         return tokenData;
     }
+
+    /**
+     * Поиск токена по ID пользователя
+     * @param {string} userId - ID пользователя
+     * @returns {Promise<Object|null>} - Данные токена или null
+     */
+    async findTokenByUserId(userId) {
+        const tokenData = await refreshTokenRepository.findByUserId(userId);
+        return tokenData;
+    }
 }
 
 module.exports = new TokenServise();

@@ -1,6 +1,6 @@
 // src/services/auth.service.js
 const userRepository = require('../repositories/user.repository');
-const TokenServise = require('./token.servise');
+const TokenService = require('./token.servise');
 const { AuthError } = require('../utils/errors');
 const UserDTO = require('../utils/dtos/UserDTO');
 const uuid = require('uuid');
@@ -26,8 +26,8 @@ class AuthServise {
         const userDTO = new UserDTO(newUser);
         
         // TODO: Generate JWT token here 
-        const tokens = await TokenServise.generateTokens({ id: userDTO.id, username: userDTO.username, email: userDTO.email, role: userDTO.role });
-        await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
+        const tokens = await TokenService.generateTokens({ id: userDTO.id, username: userDTO.username, email: userDTO.email, role: userDTO.role });
+        await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
             user: userDTO,
@@ -60,14 +60,14 @@ class AuthServise {
         });
 
         const userDTO = new UserDTO(newUser);
-        const tokens = await TokenServise.generateTokens({ 
+        const tokens = await TokenService.generateTokens({ 
             id: userDTO.id, 
             username: userDTO.username, 
             email: userDTO.email, 
             role: userDTO.role, 
             isEmailVerified: false
         });
-        await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
+        await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         await mailServise.sendActivationMail(
             newUser.email, 
@@ -161,14 +161,14 @@ class AuthServise {
         }
 
         const userDTO = new UserDTO(user);
-        const tokens = await TokenServise.generateTokens({ 
+        const tokens = await TokenService.generateTokens({ 
             id: userDTO.id, 
             username: userDTO.username, 
             email: userDTO.email, 
             role: userDTO.role, 
             isEmailVerified: userDTO.isEmailVerified
         });
-        await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
+        await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
             user: userDTO,
@@ -177,7 +177,7 @@ class AuthServise {
     }
 
     async logoutUser(refreshToken) {
-        const tokenData = await TokenServise.removeToken(refreshToken);
+        const tokenData = await TokenService.removeToken(refreshToken);
         return tokenData;
     }
 
@@ -186,22 +186,22 @@ class AuthServise {
             throw AuthError.invalidCredentials('Refresh token is missing');
         }
 
-        const userData = await TokenServise.validateRefreshToken(refreshToken);
-        const tokenFromDB = await TokenServise.findToken(refreshToken);
+        const userData = await TokenService.validateRefreshToken(refreshToken);
+        const tokenFromDB = await TokenService.findToken(refreshToken);
         if (!userData || !tokenFromDB) {
             throw AuthError.invalidCredentials('Invalid refresh token');
         }
 
         const user = await userRepository.findById(userData.id);
         const userDTO = new UserDTO(user);
-        const tokens = await TokenServise.generateTokens({ 
+        const tokens = await TokenService.generateTokens({ 
             id: userDTO.id, 
             username: userDTO.username, 
             email: userDTO.email, 
             role: userDTO.role, 
             isEmailVerified: userDTO.isEmailVerified
         });
-        await TokenServise.saveToken(userDTO.id, tokens.refreshToken);
+        await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
             user: userDTO,

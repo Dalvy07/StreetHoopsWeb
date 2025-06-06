@@ -52,6 +52,19 @@ class RefreshTokenRepository {
         }
         return tokenData;
     }
+
+    /**
+     * Удаление всех refresh токенов пользователя
+     * @param {string} userId - ID пользователя
+     * @returns {Promise<Object>} - Результат удаления
+     */
+    async deleteByUserId(userId) {
+        const result = await RefreshToken.deleteMany({ userId });
+        return {
+            success: true,
+            deletedCount: result.deletedCount
+        };
+    }
 }
 
 module.exports = new RefreshTokenRepository();
