@@ -17,6 +17,7 @@ const validate = require('../middleware/validate.middleware');
 
 // Публичные маршруты после регестрации на сервере будут доступны по /auth
 router.post('/register', registerMinimalSchema, validate, authController.registerUserMinimal);
+router.post('/register/admin', registerMinimalSchema, validate, authController.registerAdmin);
 router.post('/login', loginSchema, validate, authController.loginUser);
 router.post('/logout', logoutSchema, validate, authController.logoutUser);
 router.get('/refresh', refreshTokenSchema, validate, authController.refreshToken);

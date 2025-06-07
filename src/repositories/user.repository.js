@@ -32,6 +32,18 @@ class UserRepository {
     return await user.save();
   }
 
+  async createAdmin({ username, email, password, emailVerificationLink, isEmailVerified = false, role = 'admin' }) {
+    const user = new User({
+      username: username,
+      email: email,
+      password: password,
+      emailVerificationLink: emailVerificationLink,
+      isEmailVerified: isEmailVerified,
+      role: role
+    });
+    return await user.save();
+  }
+
   /**
    * Получение пользователя по ID
    * @param {string} userId - ID пользователя
