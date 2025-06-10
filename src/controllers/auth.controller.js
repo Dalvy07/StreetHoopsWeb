@@ -17,6 +17,18 @@ const authController = {
         res.status(201).json(ApiResponse.created(newUser, 'User registered successfully'));
     }),
 
+    registerAdmin: asyncHandler(async (req, res) => {
+        const { username, email, password } = req.body;
+        const newAdmin = await authService.registerAdmin({ username, email, password });
+
+        res.cookie('refreshToken', newAdmin.refreshToken, {
+            maxAge: parseInt(process.env.JWT_REFRESH_EXPIRE_SEC) * 1000,
+            httpOnly: true
+            // secure: process.env.NODE_ENV === 'production',
+        });
+        res.status(201).json(ApiResponse.created(newAdmin, 'Administrator registered successfully'));
+    }),
+
     activateEmail: asyncHandler(async (req, res) => {
         const activationLink = req.params.link;
 
@@ -32,7 +44,7 @@ const authController = {
     resendVerificationEmail: asyncHandler(async (req, res) => {
         const userId = req.user.id;
         const result = await authService.resendVerificationEmail(userId);
-        
+
         // Ошибки выбрасываются в сервисе
         res.status(200).json(ApiResponse.success(null, result.message));
     }),
@@ -51,7 +63,7 @@ const authController = {
         if (!userInfo.user.isEmailVerified) {
             message += '. Please verify your email to access all features';
         }
-        
+
         res.status(200).json(ApiResponse.success(userInfo, message));
     }),
 

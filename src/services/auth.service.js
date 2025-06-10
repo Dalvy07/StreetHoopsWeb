@@ -24,14 +24,14 @@ class AuthServise {
         // Создаем нового пользователя
         const newUser = await userRepository.create(userData);
         const userDTO = new UserDTO(newUser);
-        
+
         // TODO: Generate JWT token here 
         const tokens = await TokenService.generateTokens({ id: userDTO.id, username: userDTO.username, email: userDTO.email, role: userDTO.role });
         await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
             user: userDTO,
-            ... tokens
+            ...tokens
         };
     }
 
@@ -52,32 +52,79 @@ class AuthServise {
 
         // Создаем нового пользователя
         const newUser = await userRepository.createMinimal({
-            username: username, 
-            email: email, 
-            password: password, 
+            username: username,
+            email: email,
+            password: password,
             emailVerificationLink: activationLink,
             isEmailVerified: false
         });
 
         const userDTO = new UserDTO(newUser);
-        const tokens = await TokenService.generateTokens({ 
-            id: userDTO.id, 
-            username: userDTO.username, 
-            email: userDTO.email, 
-            role: userDTO.role, 
+        const tokens = await TokenService.generateTokens({
+            id: userDTO.id,
+            username: userDTO.username,
+            email: userDTO.email,
+            role: userDTO.role,
             isEmailVerified: false
         });
         await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         await mailServise.sendActivationMail(
-            newUser.email, 
+            newUser.email,
             newUser.emailVerificationLink,  //
             newUser.username
         );
 
         return {
             user: userDTO,
-            ... tokens
+            ...tokens
+        };
+    }
+
+    async registerAdmin({ username, email, password}) {
+        // Проверяем, существует ли пользователь с таким username
+        const existingUsername = await userRepository.findByUsername(username);
+        if (existingUsername) {
+            throw AuthError.invalidCredentials('Username already taken');
+        }
+
+        // Проверяем, существует ли пользователь с таким email
+        const existingUser = await userRepository.findByEmail(email);
+        if (existingUser) {
+            throw AuthError.invalidCredentials('Email already in use');
+        }
+
+        const activationLink = uuid.v4();
+
+        // Создаем нового администратора
+        const newAdmin = await userRepository.createAdmin({
+            username: username,
+            email: email,
+            password: password,
+            emailVerificationLink: activationLink,
+            isEmailVerified: false,
+            role: 'admin'
+        });
+
+        const adminDTO = new UserDTO(newAdmin);
+        const tokens = await TokenService.generateTokens({
+            id: adminDTO.id,
+            username: adminDTO.username,
+            email: adminDTO.email,
+            role: adminDTO.role,
+            isEmailVerified: false
+        });
+        await TokenService.saveToken(adminDTO.id, tokens.refreshToken);
+
+        await mailServise.sendActivationMail(
+            newAdmin.email,
+            newAdmin.emailVerificationLink,
+            newAdmin.username
+        );
+
+        return {
+            user: adminDTO,
+            ...tokens
         };
     }
 
@@ -97,7 +144,7 @@ class AuthServise {
         }
 
         user.isEmailVerified = true;
-        user.emailVerificationLink  = null;
+        user.emailVerificationLink = null;
         await user.save();
 
         const userDTO = new UserDTO(user);
@@ -113,7 +160,7 @@ class AuthServise {
 
     async resendVerificationEmail(userId) {
         const user = await userRepository.findById(userId);
-        
+
         // Проверяем, не подтвержден ли уже email
         if (user.isEmailVerified) {
             // return {
@@ -145,7 +192,7 @@ class AuthServise {
 
         return {
             success: true,
-            message: 'Verification email sent successfully' 
+            message: 'Verification email sent successfully'
         };
     }
 
@@ -161,18 +208,18 @@ class AuthServise {
         }
 
         const userDTO = new UserDTO(user);
-        const tokens = await TokenService.generateTokens({ 
-            id: userDTO.id, 
-            username: userDTO.username, 
-            email: userDTO.email, 
-            role: userDTO.role, 
+        const tokens = await TokenService.generateTokens({
+            id: userDTO.id,
+            username: userDTO.username,
+            email: userDTO.email,
+            role: userDTO.role,
             isEmailVerified: userDTO.isEmailVerified
         });
         await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
             user: userDTO,
-            ... tokens
+            ...tokens
         };
     }
 
@@ -194,18 +241,18 @@ class AuthServise {
 
         const user = await userRepository.findById(userData.id);
         const userDTO = new UserDTO(user);
-        const tokens = await TokenService.generateTokens({ 
-            id: userDTO.id, 
-            username: userDTO.username, 
-            email: userDTO.email, 
-            role: userDTO.role, 
+        const tokens = await TokenService.generateTokens({
+            id: userDTO.id,
+            username: userDTO.username,
+            email: userDTO.email,
+            role: userDTO.role,
             isEmailVerified: userDTO.isEmailVerified
         });
         await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         return {
             user: userDTO,
-            ... tokens
+            ...tokens
         };
     }
 }
