@@ -48,7 +48,7 @@ class GameRepository {
    */
   async findById(gameId) {
     const game = await Game.findById(gameId)
-      .populate('court', 'name location photos features')
+      .populate('court', 'name location photos')
       .populate('creator', 'username fullName avatar')
       .populate('currentPlayers.user', 'username fullName avatar');
     
@@ -79,6 +79,7 @@ class GameRepository {
       Game.find(filter)
         .populate('court', 'name location photos')
         .populate('creator', 'username fullName avatar')
+        .populate('currentPlayers.user', 'username fullName avatar')
         .skip(skip)
         .limit(limit)
         .sort({ dateTime: 1 }),
@@ -213,7 +214,7 @@ class GameRepository {
    * @param {string} userId - ID пользователя
    * @returns {Promise<Game>} - Обновленная игра
    * @throws {NotFoundError} - Если игра не найдена
-   * @throws {BusinessError} - Если возникли ошибки, связанные с бизнес-логикой
+   * @throws {GameError} - Если возникли ошибки, связанные с логикой игры
    */
   async leaveGame(gameId, userId) {
     const game = await this.findById(gameId);
@@ -229,8 +230,7 @@ class GameRepository {
     
     // Проверка, является ли пользователь создателем игры
     if (game.creator._id.toString() === userId) {
-      // Создатель не может покинуть игру, но может отменить её
-      throw new Error('Game creator cannot leave the game, use cancelGame instead');
+      throw new GameError.creatorCannotLeave(gameId);
     }
     
     // Проверяем, участвует ли пользователь в игре
@@ -239,7 +239,7 @@ class GameRepository {
     );
     
     if (playerIndex === -1) {
-      throw new Error('User is not a participant of this game');
+      throw new GameError.notParticipant(gameId, userId);
     }
     
     // Удаляем игрока из списка участников
@@ -251,7 +251,11 @@ class GameRepository {
       { $pull: { joinedGames: gameId } }
     );
     
-    return await game.save();
+    // Сохраняем обновленную игру
+    const updatedGame = await game.save();
+    
+    // Загружаем обновленную игру со всеми связями
+    return await this.findById(gameId);
   }
 
   /**
