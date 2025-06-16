@@ -29,6 +29,18 @@ const authController = {
         res.status(201).json(ApiResponse.created(newAdmin, 'Administrator registered successfully'));
     }),
 
+    // activateEmail: asyncHandler(async (req, res) => {
+    //     const activationLink = req.params.link;
+
+    //     console.log('URL params:', req.params);
+    //     console.log('Extracted link:', activationLink);
+
+    //     const result = await authService.activateEmail(activationLink);
+
+    //     // res.redirect(process.env.CLIENT_URL);
+    //     res.status(200).json(ApiResponse.success(result.user, 'Email verification successful'));
+    // }),
+
     activateEmail: asyncHandler(async (req, res) => {
         const activationLink = req.params.link;
 
@@ -37,8 +49,19 @@ const authController = {
 
         const result = await authService.activateEmail(activationLink);
 
-        // res.redirect(process.env.CLIENT_URL);
-        res.status(200).json(ApiResponse.success(result.user, 'Email verification successful'));
+        // Устанавливаем cookie с refresh токеном
+        res.cookie('refreshToken', result.tokens.refreshToken, {
+            maxAge: parseInt(process.env.JWT_REFRESH_EXPIRE_SEC) * 1000,
+            httpOnly: true
+            // secure: process.env.NODE_ENV === 'production',
+        });
+
+        // Вместо JSON ответа делаем редирект на фронтенд с токеном
+        const frontendUrl = process.env.CLIENT_URL || 'http://localhost:3001';
+        const redirectUrl = `${frontendUrl}/email-verified?token=${result.tokens.accessToken}&verified=true`;
+
+        console.log('Redirecting to:', redirectUrl);
+        res.redirect(redirectUrl);
     }),
 
     resendVerificationEmail: asyncHandler(async (req, res) => {

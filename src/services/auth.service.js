@@ -135,26 +135,32 @@ class AuthServise {
         }
 
         if (user.isEmailVerified) {
-            // return { 
-            //     success: true, 
-            //     message: 'Email already verified',
-            //     alreadyVerified: true
-            // };
             throw AuthError.invalidCredentials('Email already verified');
         }
 
         user.isEmailVerified = true;
         user.emailVerificationLink = null;
         await user.save();
-
+        
         const userDTO = new UserDTO(user);
+        const tokens = await TokenService.generateTokens({
+            id: userDTO.id,
+            username: userDTO.username,
+            email: userDTO.email,
+            role: userDTO.role,
+            isEmailVerified: true
+        });
+
+        // Сохраняем новый refresh токен
+        await TokenService.saveToken(userDTO.id, tokens.refreshToken);
 
         await mailServise.sendEmailVerifiedNotification(user.email, user.username);
 
         return {
             success: true,
             message: 'Email successfully verified',
-            user: userDTO
+            user: userDTO,
+            tokens: tokens
         };
     }
 
