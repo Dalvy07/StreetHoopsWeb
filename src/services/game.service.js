@@ -21,10 +21,10 @@ class GameService {
     const court = await courtRepository.findById(gameData.court);
     const gameDate = new Date(gameData.dateTime);
     const endTime = new Date(gameDate.getTime() + gameData.duration * 60000);
-    
+
     const startTimeStr = this.formatTimeFromDate(gameDate);
     const endTimeStr = this.formatTimeFromDate(endTime);
-    
+
     const isAvailable = await courtRepository.checkAvailability(
       gameData.court,
       gameDate,
@@ -178,7 +178,7 @@ class GameService {
     };
 
     // Убираем undefined значения из фильтра
-    Object.keys(gameFilter).forEach(key => 
+    Object.keys(gameFilter).forEach(key =>
       gameFilter[key] === undefined && delete gameFilter[key]
     );
 
@@ -218,39 +218,50 @@ class GameService {
     return await gameRepository.findByParticipant(userId, page, limit);
   }
 
+  // /**
+  //  * Получение всех игр пользователя (созданных и присоединенных)
+  //  * @param {string} userId - ID пользователя
+  //  * @param {number} page - Номер страницы
+  //  * @param {number} limit - Количество на странице
+  //  * @returns {Promise<Object>} - Все игры пользователя
+  //  */
+  // async getUserAllGames(userId, page = 1, limit = 10) {
+  //   // Получаем созданные и присоединенные игры
+  //   const [createdGames, joinedGames] = await Promise.all([
+  //     gameRepository.findByCreator(userId, 1, 1000),
+  //     gameRepository.findByParticipant(userId, 1, 1000)
+  //   ]);
+
+  //   // Объединяем и удаляем дубликаты
+  //   const allGames = [...createdGames.games, ...joinedGames.games];
+  //   const uniqueGames = Array.from(
+  //     new Map(allGames.map(game => [game._id.toString(), game])).values()
+  //   );
+
+  //   // Сортируем по дате
+  //   uniqueGames.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+  //   // Применяем пагинацию
+  //   const start = (page - 1) * limit;
+  //   const paginatedGames = uniqueGames.slice(start, start + limit);
+
+  //   return {
+  //     games: paginatedGames,
+  //     total: uniqueGames.length,
+  //     page: parseInt(page),
+  //     limit: parseInt(limit)
+  //   };
+  // }
+
   /**
-   * Получение всех игр пользователя (созданных и присоединенных)
-   * @param {string} userId - ID пользователя
-   * @param {number} page - Номер страницы
-   * @param {number} limit - Количество на странице
-   * @returns {Promise<Object>} - Все игры пользователя
-   */
+ * Получение всех игр пользователя (созданных и присоединенных)
+ * @param {string} userId - ID пользователя
+ * @param {number} page - Номер страницы
+ * @param {number} limit - Количество на странице
+ * @returns {Promise<Object>} - Все игры пользователя
+ */
   async getUserAllGames(userId, page = 1, limit = 10) {
-    // Получаем созданные и присоединенные игры
-    const [createdGames, joinedGames] = await Promise.all([
-      gameRepository.findByCreator(userId, 1, 1000),
-      gameRepository.findByParticipant(userId, 1, 1000)
-    ]);
-
-    // Объединяем и удаляем дубликаты
-    const allGames = [...createdGames.games, ...joinedGames.games];
-    const uniqueGames = Array.from(
-      new Map(allGames.map(game => [game._id.toString(), game])).values()
-    );
-
-    // Сортируем по дате
-    uniqueGames.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-
-    // Применяем пагинацию
-    const start = (page - 1) * limit;
-    const paginatedGames = uniqueGames.slice(start, start + limit);
-
-    return {
-      games: paginatedGames,
-      total: uniqueGames.length,
-      page: parseInt(page),
-      limit: parseInt(limit)
-    };
+    return await gameRepository.getUserAllGames(userId, page, limit);
   }
 
   /**
@@ -268,7 +279,7 @@ class GameService {
   async getNearbyGames(longitude, latitude, distance, fromDate, toDate, page = 1, limit = 10, filter = {}) {
     // Сначала находим площадки поблизости
     const nearbyCourts = await courtRepository.findNearby(longitude, latitude, distance, {}, 1, 1000);
-    
+
     if (nearbyCourts.courts.length === 0) {
       return {
         games: [],
@@ -293,7 +304,7 @@ class GameService {
     };
 
     // Убираем undefined значения из фильтра
-    Object.keys(gameFilter).forEach(key => 
+    Object.keys(gameFilter).forEach(key =>
       gameFilter[key] === undefined && delete gameFilter[key]
     );
 
@@ -346,10 +357,10 @@ class GameService {
     allGames.games.forEach(game => {
       // По статусу
       stats.by_status[game.status] = (stats.by_status[game.status] || 0) + 1;
-      
+
       // По типу спорта
       stats.by_sport[game.sportType] = (stats.by_sport[game.sportType] || 0) + 1;
-      
+
       // По уровню мастерства
       stats.by_skill_level[game.skillLevel] = (stats.by_skill_level[game.skillLevel] || 0) + 1;
     });
@@ -392,7 +403,7 @@ class GameService {
     // Проверяем дату игры
     const gameDate = new Date(gameData.dateTime);
     const now = new Date();
-    
+
     if (gameDate <= now) {
       throw new ValidationError('Game date must be in the future');
     }
@@ -400,14 +411,14 @@ class GameService {
     // Проверяем, что игра не слишком далеко в будущем (например, не более чем на год)
     const maxFutureDate = new Date();
     maxFutureDate.setFullYear(maxFutureDate.getFullYear() + 1);
-    
+
     if (gameDate > maxFutureDate) {
       throw new ValidationError('Game date cannot be more than 1 year in the future');
     }
 
     // Проверяем существование площадки
     const court = await courtRepository.findById(gameData.court);
-    
+
     // Проверяем, поддерживает ли площадка этот тип спорта
     if (!court.sportTypes.includes(gameData.sportType)) {
       throw new ValidationError(`Court does not support ${gameData.sportType}`);

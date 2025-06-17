@@ -18,25 +18,25 @@ class GameRepository {
     if (gameTime < new Date()) {
       throw new GameError.gameTimeInPast(gameTime);
     }
-    
+
     // Создаем игру
     const game = new Game(gameData);
-    
+
     // Добавляем создателя в список игроков
     game.currentPlayers.push({
       user: gameData.creator,
       status: 'confirmed'
     });
-    
+
     // Сохраняем игру
     const savedGame = await game.save();
-    
+
     // Обновляем массив createdGames у пользователя-создателя
     await User.findByIdAndUpdate(
       gameData.creator,
       { $push: { createdGames: savedGame._id } }
     );
-    
+
     return savedGame;
   }
 
@@ -51,11 +51,11 @@ class GameRepository {
       .populate('court', 'name location photos')
       .populate('creator', 'username fullName avatar')
       .populate('currentPlayers.user', 'username fullName avatar');
-    
+
     if (!game) {
       throw new NotFoundError('Game not found', 'Game', gameId);
     }
-    
+
     return game;
   }
 
@@ -68,13 +68,13 @@ class GameRepository {
    */
   async findAll(page = 1, limit = 10, filter = {}) {
     const skip = (page - 1) * limit;
-    
+
     // По умолчанию показываем только предстоящие игры
     if (!filter.status) {
       filter.status = 'scheduled';
       filter.dateTime = { $gt: new Date() };
     }
-    
+
     const [games, total] = await Promise.all([
       Game.find(filter)
         .populate('court', 'name location photos')
@@ -85,7 +85,7 @@ class GameRepository {
         .sort({ dateTime: 1 }),
       Game.countDocuments(filter)
     ]);
-    
+
     return {
       games,
       total,
@@ -104,7 +104,7 @@ class GameRepository {
    */
   async update(gameId, updateData) {
     const game = await this.findById(gameId);
-    
+
     // Проверка статуса игры
     if (game.status !== 'scheduled') {
       throw new GameError.invalidStatus(
@@ -113,7 +113,7 @@ class GameRepository {
         'scheduled'
       );
     }
-    
+
     // Проверка даты игры, если она обновляется
     if (updateData.dateTime) {
       const gameTime = new Date(updateData.dateTime);
@@ -121,7 +121,7 @@ class GameRepository {
         throw new GameError.gameTimeInPast(gameTime);
       }
     }
-    
+
     // Обновляем игру
     const updatedGame = await Game.findByIdAndUpdate(
       gameId,
@@ -131,11 +131,11 @@ class GameRepository {
       .populate('court', 'name location photos features')
       .populate('creator', 'username fullName avatar')
       .populate('currentPlayers.user', 'username fullName avatar');
-    
+
     if (!updatedGame) {
       throw new NotFoundError('Game not found', 'Game', gameId);
     }
-    
+
     return updatedGame;
   }
 
@@ -149,7 +149,7 @@ class GameRepository {
    */
   async cancelGame(gameId, reason) {
     const game = await this.findById(gameId);
-    
+
     // Проверка статуса игры
     if (game.status !== 'scheduled') {
       throw new GameError.invalidStatus(
@@ -158,11 +158,11 @@ class GameRepository {
         'scheduled'
       );
     }
-    
+
     // Отменяем игру
     game.status = 'cancelled';
     game.cancelReason = reason;
-    
+
     return await game.save();
   }
 
@@ -176,7 +176,7 @@ class GameRepository {
    */
   async joinGame(gameId, userId) {
     const game = await this.findById(gameId);
-    
+
     // Проверка возможности присоединения
     const canJoin = game.canJoin(userId);
     if (!canJoin.canJoin) {
@@ -192,19 +192,19 @@ class GameRepository {
         );
       }
     }
-    
+
     // Добавляем игрока
     game.currentPlayers.push({
       user: userId,
       status: 'confirmed'
     });
-    
+
     // Добавляем игру в список игр пользователя
     await User.findByIdAndUpdate(
       userId,
       { $push: { joinedGames: gameId } }
     );
-    
+
     return await game.save();
   }
 
@@ -218,7 +218,7 @@ class GameRepository {
    */
   async leaveGame(gameId, userId) {
     const game = await this.findById(gameId);
-    
+
     // Проверка статуса игры
     if (game.status !== 'scheduled') {
       throw new GameError.invalidStatus(
@@ -227,33 +227,33 @@ class GameRepository {
         'scheduled'
       );
     }
-    
+
     // Проверка, является ли пользователь создателем игры
     if (game.creator._id.toString() === userId) {
       throw new GameError.creatorCannotLeave(gameId);
     }
-    
+
     // Проверяем, участвует ли пользователь в игре
     const playerIndex = game.currentPlayers.findIndex(
       player => player.user._id.toString() === userId
     );
-    
+
     if (playerIndex === -1) {
       throw new GameError.notParticipant(gameId, userId);
     }
-    
+
     // Удаляем игрока из списка участников
     game.currentPlayers.splice(playerIndex, 1);
-    
+
     // Удаляем игру из списка игр пользователя
     await User.findByIdAndUpdate(
       userId,
       { $pull: { joinedGames: gameId } }
     );
-    
+
     // Сохраняем обновленную игру
     const updatedGame = await game.save();
-    
+
     // Загружаем обновленную игру со всеми связями
     return await this.findById(gameId);
   }
@@ -271,7 +271,7 @@ class GameRepository {
       status: 'scheduled',
       dateTime: { $gt: new Date() }
     };
-    
+
     return await this.findAll(page, limit, filter);
   }
 
@@ -298,10 +298,10 @@ class GameRepository {
     const filter = {
       'currentPlayers.user': userId
     };
-    
+
     return await this.findAll(page, limit, filter);
   }
-  
+
   /**
    * Поиск предстоящих игр
    * @param {Date} fromDate - Начальная дата поиска (по умолчанию - текущая дата)
@@ -316,7 +316,7 @@ class GameRepository {
       toDate = new Date(fromDate);
       toDate.setDate(toDate.getDate() + 7);
     }
-    
+
     const filter = {
       status: 'scheduled',
       dateTime: {
@@ -324,7 +324,7 @@ class GameRepository {
         $lte: toDate
       }
     };
-    
+
     return await this.findAll(page, limit, filter);
   }
 
@@ -341,8 +341,51 @@ class GameRepository {
       status: 'scheduled',
       dateTime: { $gt: new Date() }
     };
-    
+
     return await this.findAll(page, limit, filter);
+  }
+
+  /**
+ * Получение всех игр пользователя (созданных и где участвует)
+ * @param {string} userId - ID пользователя
+ * @param {number} page - Номер страницы
+ * @param {number} limit - Количество игр на странице
+ * @returns {Promise<{games: Game[], total: number, page: number, limit: number}>}
+ */
+  async getUserAllGames(userId, page = 1, limit = 10) {
+    const skip = (page - 1) * limit;
+
+    // Find games where user is either creator OR participant
+    const games = await Game.find({
+      $or: [
+        { creator: userId },
+        { 'currentPlayers.user': userId }
+      ]
+    })
+      .populate('creator', 'username fullName avatar')
+      .populate('court', 'name location photos features')
+      .populate('currentPlayers.user', 'username fullName avatar')
+      .sort({ dateTime: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await Game.countDocuments({
+      $or: [
+        { creator: userId },
+        { 'currentPlayers.user': userId }
+      ]
+    });
+
+    return {
+      games,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page * limit < total,
+      hasPrev: page > 1
+    };
   }
 }
 
